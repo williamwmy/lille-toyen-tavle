@@ -121,7 +121,7 @@ const DraggablePlayer = ({
       <circle
         cx={position.x}
         cy={position.y}
-        r="12"
+        r="16"
         fill={player.team === 'blue' ? '#2196F3' : '#F44336'}
         stroke="#ffffff"
         strokeWidth="2"
@@ -133,7 +133,7 @@ const DraggablePlayer = ({
         textAnchor="middle"
         dominantBaseline="middle"
         fill="white"
-        fontSize="8"
+        fontSize="12"
         fontWeight="bold"
         pointerEvents="none"
       >
@@ -142,12 +142,13 @@ const DraggablePlayer = ({
       {player.name && (
         <text
           x={position.x}
-          y={position.y + 25}
+          y={position.y + 32}
           textAnchor="middle"
           fill="#333"
-          fontSize="6"
+          fontSize="9"
           fontWeight="bold"
           pointerEvents="none"
+          style={{ textShadow: '0 0 3px white' }}
         >
           {player.name}
         </text>
