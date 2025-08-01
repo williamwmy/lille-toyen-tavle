@@ -1,0 +1,94 @@
+.roster-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 5px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  user-select: none;
+}
+
+.roster-player:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.roster-player.blue {
+  border-color: #2196F3;
+}
+
+.roster-player.red {
+  border-color: #F44336;
+}
+
+.player-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.roster-player.blue .player-circle {
+  background-color: #2196F3;
+}
+
+.roster-player.red .player-circle {
+  background-color: #F44336;
+}
+
+.player-name {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  color: #333;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.draggable-player {
+  cursor: grab;
+}
+
+.draggable-player.dragging {
+  cursor: grabbing;
+}
+
+.player-circle-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.draggable-player.dragging .player-circle-svg {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+@media (max-width: 480px) {
+  .roster-player {
+    min-width: 50px;
+    margin: 3px;
+    padding: 6px;
+  }
+  
+  .player-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+  
+  .player-name {
+    font-size: 9px;
+    max-width: 50px;
+  }
+}

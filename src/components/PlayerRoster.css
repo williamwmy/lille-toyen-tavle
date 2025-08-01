@@ -1,0 +1,172 @@
+.player-roster {
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.roster-section {
+  margin-bottom: 12px;
+}
+
+.roster-section h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.players-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  justify-content: flex-start;
+}
+
+.player-item {
+  position: relative;
+  display: inline-block;
+}
+
+.remove-player-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #f44336;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.remove-player-btn:hover {
+  background: #d32f2f;
+}
+
+.add-player-section {
+  margin-top: 10px;
+}
+
+.add-player-btn, .add-opponent-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.add-player-btn:hover, .add-opponent-btn:hover {
+  background: #45a049;
+}
+
+.add-opponent-btn {
+  background: #FF5722;
+}
+
+.add-opponent-btn:hover {
+  background: #E64A19;
+}
+
+.add-player-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 200px;
+}
+
+.add-player-form input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.form-buttons button {
+  flex: 1;
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.form-buttons button:last-child {
+  background: #757575;
+}
+
+.form-buttons button:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .player-roster {
+    padding: 8px;
+  }
+  
+  .roster-section {
+    margin-bottom: 8px;
+  }
+  
+  .roster-section h3 {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .players-grid {
+    gap: 4px;
+  }
+  
+  .add-player-btn, .add-opponent-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-roster {
+    padding: 6px;
+  }
+  
+  .roster-section h3 {
+    font-size: 11px;
+  }
+  
+  .players-grid {
+    justify-content: flex-start;
+    gap: 3px;
+  }
+  
+  .add-player-form {
+    max-width: 160px;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+  }
+  
+  .add-player-btn, .add-opponent-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
