@@ -142,13 +142,17 @@ const DraggablePlayer = ({
       {player.name && (
         <text
           x={position.x}
-          y={position.y + 32}
+          y={position.y + 34}
           textAnchor="middle"
-          fill="#333"
-          fontSize="9"
-          fontWeight="bold"
+          fill="#000000"
+          fontSize="11"
+          fontWeight="900"
+          fontFamily="Arial, sans-serif"
           pointerEvents="none"
-          style={{ textShadow: '0 0 3px white' }}
+          style={{ 
+            textShadow: '0 0 4px white, 0 0 8px white, 1px 1px 0 white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white',
+            letterSpacing: '0.5px'
+          }}
         >
           {player.name}
         </text>

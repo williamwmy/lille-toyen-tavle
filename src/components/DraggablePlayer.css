@@ -9,8 +9,11 @@
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 70px;
+  min-width: 80px;
   user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .roster-player:hover {
@@ -48,14 +51,17 @@
 }
 
 .player-name {
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 900;
+  font-family: 'Arial Black', Arial, sans-serif;
   text-align: center;
-  color: #333;
-  max-width: 70px;
+  color: #000;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 0 3px white, 0 0 6px white, 1px 1px 0 white, -1px -1px 0 white;
+  letter-spacing: 0.5px;
 }
 
 .draggable-player {
@@ -76,7 +82,7 @@
 
 @media (max-width: 480px) {
   .roster-player {
-    min-width: 65px;
+    min-width: 75px;
     margin: 4px;
     padding: 8px;
   }
@@ -88,7 +94,7 @@
   }
   
   .player-name {
-    font-size: 11px;
-    max-width: 65px;
+    font-size: 13px;
+    max-width: 75px;
   }
 }
