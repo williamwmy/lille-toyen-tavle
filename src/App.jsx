@@ -26,13 +26,20 @@ function App() {
   }
 
   const handlePlayerDragEnd = (playerId, position) => {
-    setPlayersOnPitch(prev => 
-      prev.map(player => 
-        player.id === playerId 
-          ? { ...player, pitchPosition: position }
-          : player
+    // Check if dragged to trash zone (x: 5-55, y: 370-410)
+    if (position.x >= 5 && position.x <= 55 && position.y >= 370 && position.y <= 410) {
+      // Remove player from pitch
+      setPlayersOnPitch(prev => prev.filter(player => player.id !== playerId))
+    } else {
+      // Update player position
+      setPlayersOnPitch(prev => 
+        prev.map(player => 
+          player.id === playerId 
+            ? { ...player, pitchPosition: position }
+            : player
+        )
       )
-    )
+    }
   }
 
   const handleBallDragEnd = (position) => {
@@ -109,21 +116,13 @@ function App() {
               setSelectedDrawing={setSelectedDrawing}
             />
           </FootballPitch>
-          
-          {playersOnPitch.length > 0 && (
-            <div className="pitch-info">
-              <p>Spillere på banen: {playersOnPitch.length}</p>
-              <p>Blå: {playersOnPitch.filter(p => p.team === 'blue').length} | 
-                 Røde: {playersOnPitch.filter(p => p.team === 'red').length}</p>
-            </div>
-          )}
         </div>
         
-        <PlayerRoster onPlayerSelect={handlePlayerSelect} />
+        <PlayerRoster onPlayerSelect={handlePlayerSelect} playersOnPitch={playersOnPitch} />
       </main>
       
       <div className="version-info">
-        v1.3.1
+        v1.3.2
       </div>
     </div>
   )

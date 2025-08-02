@@ -125,6 +125,22 @@ const FootballPitch = ({ children }) => {
         
         <text x="5" y="15" fill="#ffffff" fontSize="10" fontWeight="bold">BENK</text>
         
+        {/* Remove zone at bottom of bench */}
+        <rect 
+          x="5" 
+          y="370" 
+          width="50" 
+          height="40" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth="1"
+          strokeDasharray="3,3"
+          rx="5"
+          className="remove-zone"
+        />
+        <text x="30" y="385" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">↩️</text>
+        <text x="30" y="395" fill="#ffffff" fontSize="6" fontWeight="bold" textAnchor="middle">BENK</text>
+        
         {children}
       </svg>
     </div>

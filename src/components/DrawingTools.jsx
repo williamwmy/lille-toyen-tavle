@@ -89,8 +89,21 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
 
   const stopDraggingDrawing = () => {
     if (dragPreview) {
-      onAddDrawing({ type: 'update', drawing: dragPreview });
-      setSelectedDrawing(dragPreview);
+      // Check if dragged to trash zone (x: 5-55, y: 370-410)
+      const isInTrashZone = dragPreview.x !== undefined ? 
+        (dragPreview.x >= 5 && dragPreview.x <= 55 && dragPreview.y >= 370 && dragPreview.y <= 410) :
+        (dragPreview.start && dragPreview.start.x >= 5 && dragPreview.start.x <= 55 && 
+         dragPreview.start.y >= 370 && dragPreview.start.y <= 410);
+      
+      if (isInTrashZone) {
+        // Delete the drawing
+        onAddDrawing({ type: 'delete', id: selectedDrawing.id });
+        setSelectedDrawing(null);
+      } else {
+        // Update the drawing position
+        onAddDrawing({ type: 'update', drawing: dragPreview });
+        setSelectedDrawing(dragPreview);
+      }
       setDragPreview(null);
     }
     setIsDraggingDrawing(false);

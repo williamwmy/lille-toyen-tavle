@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DraggablePlayer from './DraggablePlayer';
 import './PlayerRoster.css';
 
-const PlayerRoster = ({ onPlayerSelect, selectedPlayers = [] }) => {
+const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
   const [players, setPlayers] = useState([]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -46,6 +46,10 @@ const PlayerRoster = ({ onPlayerSelect, selectedPlayers = [] }) => {
     }
   };
 
+  const isPlayerOnPitch = (playerId) => {
+    return playersOnPitch.some(pitchPlayer => pitchPlayer.id === playerId);
+  };
+
   const addOpponentPlayer = () => {
     const newPlayer = {
       id: Date.now(),
@@ -64,7 +68,7 @@ const PlayerRoster = ({ onPlayerSelect, selectedPlayers = [] }) => {
         <h3>Spillerstall ({players.length}/12)</h3>
         <div className="players-grid">
           {players.map(player => (
-            <div key={player.id} className="player-item">
+            <div key={player.id} className={`player-item ${isPlayerOnPitch(player.id) ? 'on-pitch' : ''}`}>
               <div onClick={() => handlePlayerClick(player)}>
                 <DraggablePlayer player={player} />
               </div>

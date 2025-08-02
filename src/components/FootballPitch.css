@@ -24,6 +24,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.remove-zone {
+  transition: all 0.2s ease;
+}
+
+.remove-zone:hover {
+  stroke: #FFD54F;
+  stroke-width: 2;
+}
+
 @media (max-width: 768px) {
   .football-pitch-container {
     padding: 3px;
