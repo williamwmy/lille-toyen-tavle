@@ -8,6 +8,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   const [isDraggingDrawing, setIsDraggingDrawing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragPreview, setDragPreview] = useState(null);
+  const [justCreatedDrawing, setJustCreatedDrawing] = useState(null);
   const svgRef = useRef(null);
 
   const handleDrawingClick = (drawing, e) => {
@@ -21,6 +22,12 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const startDraggingDrawing = (drawing, e) => {
+    // Prevent dragging if we just created this drawing
+    if (justCreatedDrawing === drawing.id) {
+      setJustCreatedDrawing(null);
+      return;
+    }
+    
     if (selectedDrawing?.id !== drawing.id) return;
     
     e.stopPropagation();
@@ -68,9 +75,12 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       setDragPreview(previewDrawing);
     } else if (selectedDrawing.type === 'box') {
       const previewDrawing = {
-        ...selectedDrawing,
+        id: selectedDrawing.id,
+        type: 'box',
         x: newX,
-        y: newY
+        y: newY,
+        width: selectedDrawing.width,
+        height: selectedDrawing.height
       };
       
       setDragPreview(previewDrawing);
@@ -149,22 +159,40 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
         end: { x, y }
       };
       onAddDrawing(newDrawing);
+      setJustCreatedDrawing(newDrawing.id);
+      // Clear drawing mode after creating
+      setTimeout(() => {
+        setDrawingMode(null);
+        setSelectedDrawing(newDrawing);
+      }, 0);
     } else if (drawingMode === 'box') {
-      const newDrawing = {
-        id: Date.now(),
-        type: 'box',
-        x: Math.min(startPoint.x, x),
-        y: Math.min(startPoint.y, y),
-        width: Math.abs(x - startPoint.x),
-        height: Math.abs(y - startPoint.y)
-      };
-      onAddDrawing(newDrawing);
+      // FIX: Sørg for at boksen alltid har positiv bredde og høyde
+      const width = Math.abs(x - startPoint.x);
+      const height = Math.abs(y - startPoint.y);
+      
+      // Kun lag boksen hvis den har en meningsfull størrelse
+      if (width >= 5 && height >= 5) {
+        const newDrawing = {
+          id: Date.now(),
+          type: 'box',
+          x: Math.min(startPoint.x, x),
+          y: Math.min(startPoint.y, y),
+          width: width,
+          height: height
+        };
+        onAddDrawing(newDrawing);
+        setJustCreatedDrawing(newDrawing.id);
+        // Clear drawing mode after creating
+        setTimeout(() => {
+          setDrawingMode(null);
+          setSelectedDrawing(newDrawing);
+        }, 0);
+      }
     }
     
     setIsDrawing(false);
     setCurrentPath('');
     setStartPoint(null);
-    setDrawingMode(null);
   };
 
   const handleTouchStart = (e) => {
@@ -179,7 +207,8 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       ...e,
       clientX: touch.clientX,
       clientY: touch.clientY,
-      preventDefault: () => {}
+      preventDefault: () => {},
+      stopPropagation: () => e.stopPropagation()
     });
   };
 
@@ -191,7 +220,8 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
         ...e,
         clientX: touch.clientX,
         clientY: touch.clientY,
-        preventDefault: () => {}
+        preventDefault: () => {},
+        stopPropagation: () => e.stopPropagation()
       });
       return;
     }
@@ -202,7 +232,8 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       ...e,
       clientX: touch.clientX,
       clientY: touch.clientY,
-      preventDefault: () => {}
+      preventDefault: () => {},
+      stopPropagation: () => e.stopPropagation()
     });
   };
 
@@ -218,11 +249,12 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       ...e,
       clientX: touch.clientX,
       clientY: touch.clientY,
-      preventDefault: () => {}
+      preventDefault: () => {},
+      stopPropagation: () => e.stopPropagation()
     });
   };
 
-  const renderArrow = (drawing, isPreview = false) => {
+  const renderArrow = (drawing) => {
     // Use dragPreview if this drawing is being dragged
     const drawingToRender = (isDraggingDrawing && selectedDrawing?.id === drawing.id && dragPreview) ? dragPreview : drawing;
     
@@ -240,12 +272,44 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     
     return (
       <g key={drawing.id}>
+        {/* Invisible thick hitbox for easier interaction */}
+        <path
+          d={drawingToRender.path}
+          stroke="transparent"
+          strokeWidth="12"
+          fill="none"
+          onClick={(e) => handleDrawingClick(drawing, e)}
+          onMouseDown={(e) => startDraggingDrawing(drawing, e)}
+          onTouchStart={(e) => {
+            if (isSelected) {
+              const touch = e.touches[0];
+              startDraggingDrawing(drawing, {
+                ...e,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                stopPropagation: () => e.stopPropagation()
+              });
+            }
+          }}
+          style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
+        />
+        
+        {/* Visible arrow line */}
         <path
           d={drawingToRender.path}
           stroke={isSelected ? "#FF9800" : "#FF5722"}
           strokeWidth={isSelected ? "3" : "2"}
           fill="none"
           opacity={isDragging ? 0.7 : 1}
+          style={{ pointerEvents: 'none' }}
+        />
+        
+        {/* Invisible thick hitbox for arrowhead */}
+        <path
+          d={`M ${drawingToRender.end.x} ${drawingToRender.end.y} L ${arrowHead1X} ${arrowHead1Y} M ${drawingToRender.end.x} ${drawingToRender.end.y} L ${arrowHead2X} ${arrowHead2Y}`}
+          stroke="transparent"
+          strokeWidth="12"
+          fill="none"
           onClick={(e) => handleDrawingClick(drawing, e)}
           onMouseDown={(e) => startDraggingDrawing(drawing, e)}
           onTouchStart={(e) => {
@@ -254,31 +318,22 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
               startDraggingDrawing(drawing, {
                 ...e,
                 clientX: touch.clientX,
-                clientY: touch.clientY
+                clientY: touch.clientY,
+                stopPropagation: () => e.stopPropagation()
               });
             }
           }}
           style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
         />
+        
+        {/* Visible arrowhead */}
         <path
           d={`M ${drawingToRender.end.x} ${drawingToRender.end.y} L ${arrowHead1X} ${arrowHead1Y} M ${drawingToRender.end.x} ${drawingToRender.end.y} L ${arrowHead2X} ${arrowHead2Y}`}
           stroke={isSelected ? "#FF9800" : "#FF5722"}
           strokeWidth={isSelected ? "3" : "2"}
           fill="none"
           opacity={isDragging ? 0.7 : 1}
-          onClick={(e) => handleDrawingClick(drawing, e)}
-          onMouseDown={(e) => startDraggingDrawing(drawing, e)}
-          onTouchStart={(e) => {
-            if (isSelected) {
-              const touch = e.touches[0];
-              startDraggingDrawing(drawing, {
-                ...e,
-                clientX: touch.clientX,
-                clientY: touch.clientY
-              });
-            }
-          }}
-          style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
+          style={{ pointerEvents: 'none' }}
         />
         {isSelected && !isDragging && (
           <circle
@@ -331,7 +386,8 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
               startDraggingDrawing(drawing, {
                 ...e,
                 clientX: touch.clientX,
-                clientY: touch.clientY
+                clientY: touch.clientY,
+                stopPropagation: () => e.stopPropagation()
               });
             }
           }}
@@ -403,6 +459,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
             className="delete-selected-btn"
             onClick={() => {
               onAddDrawing({ type: 'delete', id: selectedDrawing.id });
+              setSelectedDrawing(null);
             }}
           >
             Slett valgt
