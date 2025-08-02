@@ -4,7 +4,8 @@ const DraggableBall = ({
   initialX = 180, 
   initialY = 210,
   onDragEnd,
-  pitchBounds = { minX: 5, maxX: 295, minY: 10, maxY: 410 }
+  pitchBounds = { minX: 5, maxX: 295, minY: 10, maxY: 410 },
+  sportType = 'football'
 }) => {
   const [position, setPosition] = useState({ x: initialX, y: initialY });
   const [isDragging, setIsDragging] = useState(false);
@@ -86,6 +87,7 @@ const DraggableBall = ({
     }
   };
 
+
   return (
     <g
       ref={ballRef}
@@ -98,22 +100,19 @@ const DraggableBall = ({
       onTouchEnd={handleTouchEnd}
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
     >
-      <circle
-        cx={position.x}
-        cy={position.y}
-        r="6"
-        fill="#FFA500"
-        stroke="#333"
-        strokeWidth="1"
-        style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }}
-      />
-      <circle
-        cx={position.x - 1.5}
-        cy={position.y - 1.5}
-        r="1"
-        fill="#FFD700"
-        opacity="0.8"
-      />
+      <text
+        x={position.x}
+        y={position.y}
+        fontSize="16"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        style={{ 
+          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+          userSelect: 'none'
+        }}
+      >
+        {sportType === 'volleyball' ? '🏐' : '⚽'}
+      </text>
     </g>
   );
 };

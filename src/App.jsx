@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FootballPitch from './components/FootballPitch'
+import VolleyballCourt from './components/VolleyballCourt'
 import PlayerRoster from './components/PlayerRoster'
 import DraggablePlayer from './components/DraggablePlayer'
 import DraggableBall from './components/DraggableBall'
@@ -12,6 +13,20 @@ function App() {
   const [drawings, setDrawings] = useState([])
   const [drawingMode, setDrawingMode] = useState(null)
   const [selectedDrawing, setSelectedDrawing] = useState(null)
+  const [currentSport, setCurrentSport] = useState('football')
+  const [showMenu, setShowMenu] = useState(false)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showMenu && !event.target.closest('.app-header')) {
+        setShowMenu(false)
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showMenu])
 
   const handlePlayerSelect = (player) => {
     const playerOnPitch = {
@@ -53,6 +68,14 @@ function App() {
     setDrawings([])
   }
 
+  const switchSport = (sport) => {
+    clearPitch()
+    setCurrentSport(sport)
+    setShowMenu(false)
+    // Reset ball position based on sport
+    setBallPosition(sport === 'volleyball' ? { x: 180, y: 200 } : { x: 180, y: 210 })
+  }
+
   const handleAddDrawing = (drawing) => {
     if (drawing.type === 'clear') {
       setDrawings([])
@@ -72,12 +95,38 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>⚽ Lille Tøyen Tavle</h1>
+        <div className="header-left">
+          <button 
+            className="hamburger-btn"
+            onClick={() => setShowMenu(!showMenu)}
+            aria-label="Meny"
+          >
+            ☰
+          </button>
+          <h1>{currentSport === 'football' ? '⚽ Lille Tøyen Tavle' : '🏐 Lille Tøyen Tavle'}</h1>
+        </div>
         <div className="header-controls">
           <button onClick={clearPitch} className="clear-btn">
             Tøm banen
           </button>
         </div>
+        
+        {showMenu && (
+          <div className="menu-dropdown">
+            <button 
+              className={`menu-item ${currentSport === 'football' ? 'active' : ''}`}
+              onClick={() => switchSport('football')}
+            >
+              ⚽ Fotball
+            </button>
+            <button 
+              className={`menu-item ${currentSport === 'volleyball' ? 'active' : ''}`}
+              onClick={() => switchSport('volleyball')}
+            >
+              🏐 Volleyball
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="app-main">
@@ -91,38 +140,72 @@ function App() {
             selectedDrawing={selectedDrawing}
             setSelectedDrawing={setSelectedDrawing}
           />
-          <FootballPitch>
-            {playersOnPitch.map(player => (
-              <DraggablePlayer
-                key={player.id}
-                player={player}
-                isOnPitch={true}
-                initialX={player.pitchPosition.x}
-                initialY={player.pitchPosition.y}
-                onDragEnd={handlePlayerDragEnd}
+          {currentSport === 'football' ? (
+            <FootballPitch>
+              {playersOnPitch.map(player => (
+                <DraggablePlayer
+                  key={player.id}
+                  player={player}
+                  isOnPitch={true}
+                  initialX={player.pitchPosition.x}
+                  initialY={player.pitchPosition.y}
+                  onDragEnd={handlePlayerDragEnd}
+                />
+              ))}
+              <DraggableBall
+                initialX={ballPosition.x}
+                initialY={ballPosition.y}
+                onDragEnd={handleBallDragEnd}
+                sportType={currentSport}
               />
-            ))}
-            <DraggableBall
-              initialX={ballPosition.x}
-              initialY={ballPosition.y}
-              onDragEnd={handleBallDragEnd}
-            />
-            <DrawingTools 
-              onAddDrawing={handleAddDrawing} 
-              drawings={drawings}
-              drawingMode={drawingMode}
-              setDrawingMode={setDrawingMode}
-              selectedDrawing={selectedDrawing}
-              setSelectedDrawing={setSelectedDrawing}
-            />
-          </FootballPitch>
+              <DrawingTools 
+                onAddDrawing={handleAddDrawing} 
+                drawings={drawings}
+                drawingMode={drawingMode}
+                setDrawingMode={setDrawingMode}
+                selectedDrawing={selectedDrawing}
+                setSelectedDrawing={setSelectedDrawing}
+              />
+            </FootballPitch>
+          ) : (
+            <VolleyballCourt>
+              {playersOnPitch.map(player => (
+                <DraggablePlayer
+                  key={player.id}
+                  player={player}
+                  isOnPitch={true}
+                  initialX={player.pitchPosition.x}
+                  initialY={player.pitchPosition.y}
+                  onDragEnd={handlePlayerDragEnd}
+                />
+              ))}
+              <DraggableBall
+                initialX={ballPosition.x}
+                initialY={ballPosition.y}
+                onDragEnd={handleBallDragEnd}
+                sportType={currentSport}
+              />
+              <DrawingTools 
+                onAddDrawing={handleAddDrawing} 
+                drawings={drawings}
+                drawingMode={drawingMode}
+                setDrawingMode={setDrawingMode}
+                selectedDrawing={selectedDrawing}
+                setSelectedDrawing={setSelectedDrawing}
+              />
+            </VolleyballCourt>
+          )}
         </div>
         
-        <PlayerRoster onPlayerSelect={handlePlayerSelect} playersOnPitch={playersOnPitch} />
+        <PlayerRoster 
+          onPlayerSelect={handlePlayerSelect} 
+          maxPlayers={currentSport === 'volleyball' ? 6 : 12}
+          sportType={currentSport}
+        />
       </main>
       
       <div className="version-info">
-        v1.3.2
+        v1.4.0
       </div>
     </div>
   )

@@ -30,26 +30,6 @@
   display: inline-block;
 }
 
-.player-item.on-pitch {
-  opacity: 0.6;
-  transform: scale(0.95);
-}
-
-.player-item.on-pitch::after {
-  content: "På banen";
-  position: absolute;
-  bottom: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4CAF50;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 9px;
-  font-weight: bold;
-  white-space: nowrap;
-  z-index: 5;
-}
 
 .remove-player-btn {
   position: absolute;
@@ -107,6 +87,46 @@
 }
 
 .add-opponent-btn:hover {
+  background: #E64A19;
+}
+
+.generic-players {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-generic-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.add-generic-btn:hover {
+  background: #45a049;
+}
+
+.add-generic-btn.blue {
+  background: #2196F3;
+}
+
+.add-generic-btn.blue:hover {
+  background: #1976D2;
+}
+
+.add-generic-btn.red {
+  background: #FF5722;
+}
+
+.add-generic-btn.red:hover {
   background: #E64A19;
 }
 

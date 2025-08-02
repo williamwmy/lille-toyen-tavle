@@ -1,0 +1,56 @@
+.volleyball-court-container {
+  width: 100%;
+  max-width: 100vw;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.volleyball-court {
+  width: 100%;
+  height: auto;
+  max-width: 95vw;
+  max-height: 80vh;
+  background: #D2691E;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.remove-zone {
+  transition: all 0.2s ease;
+}
+
+.remove-zone:hover {
+  stroke: #FFD54F;
+  stroke-width: 2;
+}
+
+@media (max-width: 768px) {
+  .volleyball-court-container {
+    padding: 3px;
+  }
+  
+  .volleyball-court {
+    max-height: 75vh;
+    max-width: 98vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .volleyball-court-container {
+    padding: 2px;
+  }
+  
+  .volleyball-court {
+    max-height: 72vh;
+    max-width: 98vw;
+  }
+}

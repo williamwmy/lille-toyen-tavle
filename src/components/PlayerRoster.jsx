@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DraggablePlayer from './DraggablePlayer';
 import './PlayerRoster.css';
 
-const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
+const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' }) => {
   const [players, setPlayers] = useState([]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -19,7 +19,7 @@ const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
   };
 
   const addPlayer = () => {
-    if (players.length >= 12) return;
+    if (players.length >= maxPlayers) return;
     
     const newPlayer = {
       id: Date.now(),
@@ -46,9 +46,6 @@ const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
     }
   };
 
-  const isPlayerOnPitch = (playerId) => {
-    return playersOnPitch.some(pitchPlayer => pitchPlayer.id === playerId);
-  };
 
   const addOpponentPlayer = () => {
     const newPlayer = {
@@ -65,10 +62,10 @@ const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
   return (
     <div className="player-roster">
       <div className="roster-section">
-        <h3>Spillerstall ({players.length}/12)</h3>
+        <h3>Spillerstall ({players.length}/{maxPlayers})</h3>
         <div className="players-grid">
           {players.map(player => (
-            <div key={player.id} className={`player-item ${isPlayerOnPitch(player.id) ? 'on-pitch' : ''}`}>
+            <div key={player.id} className="player-item">
               <div onClick={() => handlePlayerClick(player)}>
                 <DraggablePlayer player={player} />
               </div>
@@ -83,7 +80,7 @@ const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
           ))}
         </div>
         
-        {players.length < 12 && (
+        {players.length < maxPlayers && (
           <div className="add-player-section">
             {!showAddForm ? (
               <button 
@@ -117,13 +114,28 @@ const PlayerRoster = ({ onPlayerSelect, playersOnPitch = [] }) => {
       </div>
 
       <div className="roster-section">
-        <h3>Motstandere</h3>
-        <button 
-          className="add-opponent-btn"
-          onClick={addOpponentPlayer}
-        >
-          + Legg til motstander
-        </button>
+        <h3>Generelle spillere</h3>
+        <div className="generic-players">
+          <button 
+            className="add-generic-btn blue"
+            onClick={() => {
+              const genericPlayer = {
+                id: Date.now(),
+                name: '',
+                team: 'blue'
+              };
+              onPlayerSelect(genericPlayer);
+            }}
+          >
+            + Blå spiller
+          </button>
+          <button 
+            className="add-generic-btn red"
+            onClick={addOpponentPlayer}
+          >
+            + Rød spiller
+          </button>
+        </div>
       </div>
     </div>
   );
