@@ -13,7 +13,9 @@ function App() {
   const [drawings, setDrawings] = useState([])
   const [drawingMode, setDrawingMode] = useState(null)
   const [selectedDrawing, setSelectedDrawing] = useState(null)
-  const [currentSport, setCurrentSport] = useState('football')
+  const [currentSport, setCurrentSport] = useState(() => {
+    return localStorage.getItem('selectedSport') || 'football'
+  })
   const [showMenu, setShowMenu] = useState(false)
 
   // Close menu when clicking outside
@@ -29,9 +31,13 @@ function App() {
   }, [showMenu])
 
   const handlePlayerSelect = (player) => {
+    // For named players, check if already on pitch
+    if (player.name && playersOnPitch.some(p => p.name === player.name && p.name !== '')) {
+      return; // Don't add if named player already exists
+    }
+    
     const playerOnPitch = {
       ...player,
-      id: player.id || Date.now(),
       pitchPosition: {
         x: Math.random() * 180 + 80,
         y: Math.random() * 320 + 50
@@ -71,6 +77,7 @@ function App() {
   const switchSport = (sport) => {
     clearPitch()
     setCurrentSport(sport)
+    localStorage.setItem('selectedSport', sport)
     setShowMenu(false)
     // Reset ball position based on sport
     setBallPosition(sport === 'volleyball' ? { x: 180, y: 200 } : { x: 180, y: 210 })
@@ -201,11 +208,12 @@ function App() {
           onPlayerSelect={handlePlayerSelect} 
           maxPlayers={currentSport === 'volleyball' ? 6 : 12}
           sportType={currentSport}
+          playersOnPitch={playersOnPitch}
         />
       </main>
       
       <div className="version-info">
-        v1.4.0
+        v1.5.0
       </div>
     </div>
   )

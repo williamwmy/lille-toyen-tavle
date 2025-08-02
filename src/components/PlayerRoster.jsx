@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DraggablePlayer from './DraggablePlayer';
 import './PlayerRoster.css';
 
-const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' }) => {
+const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football', playersOnPitch = [] }) => {
   const [players, setPlayers] = useState([]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -41,7 +41,8 @@ const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' 
   };
 
   const handlePlayerClick = (player) => {
-    if (onPlayerSelect) {
+    const isOnPitch = playersOnPitch.some(p => p.name === player.name && p.name !== '');
+    if (!isOnPitch && onPlayerSelect) {
       onPlayerSelect(player);
     }
   };
@@ -49,7 +50,7 @@ const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' 
 
   const addOpponentPlayer = () => {
     const newPlayer = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       name: '',
       team: 'red'
     };
@@ -64,20 +65,23 @@ const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' 
       <div className="roster-section">
         <h3>Spillerstall ({players.length}/{maxPlayers})</h3>
         <div className="players-grid">
-          {players.map(player => (
-            <div key={player.id} className="player-item">
-              <div onClick={() => handlePlayerClick(player)}>
-                <DraggablePlayer player={player} />
+          {players.map(player => {
+            const isOnPitch = playersOnPitch.some(p => p.name === player.name && p.name !== '');
+            return (
+              <div key={player.id} className={`player-item ${isOnPitch ? 'on-pitch' : ''}`}>
+                <div onClick={() => handlePlayerClick(player)}>
+                  <DraggablePlayer player={player} />
+                </div>
+                <button 
+                  className="remove-player-btn"
+                  onClick={() => removePlayer(player.id)}
+                  title="Fjern spiller"
+                >
+                  ×
+                </button>
               </div>
-              <button 
-                className="remove-player-btn"
-                onClick={() => removePlayer(player.id)}
-                title="Fjern spiller"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         {players.length < maxPlayers && (
@@ -120,7 +124,7 @@ const PlayerRoster = ({ onPlayerSelect, maxPlayers = 12, sportType = 'football' 
             className="add-generic-btn blue"
             onClick={() => {
               const genericPlayer = {
-                id: Date.now(),
+                id: Date.now() + Math.random(),
                 name: '',
                 team: 'blue'
               };

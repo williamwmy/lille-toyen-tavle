@@ -28,6 +28,12 @@
 .player-item {
   position: relative;
   display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.player-item.on-pitch {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 
