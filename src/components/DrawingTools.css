@@ -32,7 +32,7 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.clear-drawings-btn {
+.clear-drawings-btn, .delete-selected-btn {
   background: #757575;
   color: white;
   border: none;
@@ -44,8 +44,16 @@
   transition: background-color 0.2s;
 }
 
-.clear-drawings-btn:hover {
+.clear-drawings-btn:hover, .delete-selected-btn:hover {
   background: #616161;
+}
+
+.delete-selected-btn {
+  background: #F44336;
+}
+
+.delete-selected-btn:hover {
+  background: #D32F2F;
 }
 
 .drawing-overlay {
@@ -66,7 +74,7 @@
     gap: 8px;
   }
   
-  .tool-btn, .clear-drawings-btn {
+  .tool-btn, .clear-drawings-btn, .delete-selected-btn {
     padding: 6px 10px;
     font-size: 11px;
     min-width: 50px;
@@ -79,7 +87,7 @@
     gap: 6px;
   }
   
-  .tool-btn, .clear-drawings-btn {
+  .tool-btn, .clear-drawings-btn, .delete-selected-btn {
     padding: 5px 8px;
     font-size: 10px;
     min-width: 45px;

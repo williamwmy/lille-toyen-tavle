@@ -11,6 +11,7 @@ function App() {
   const [ballPosition, setBallPosition] = useState({ x: 180, y: 210 })
   const [drawings, setDrawings] = useState([])
   const [drawingMode, setDrawingMode] = useState(null)
+  const [selectedDrawing, setSelectedDrawing] = useState(null)
 
   const handlePlayerSelect = (player) => {
     const playerOnPitch = {
@@ -48,6 +49,14 @@ function App() {
   const handleAddDrawing = (drawing) => {
     if (drawing.type === 'clear') {
       setDrawings([])
+      setSelectedDrawing(null)
+    } else if (drawing.type === 'delete') {
+      setDrawings(prev => prev.filter(d => d.id !== drawing.id))
+      setSelectedDrawing(null)
+    } else if (drawing.type === 'update') {
+      setDrawings(prev => prev.map(d => d.id === drawing.drawing.id ? drawing.drawing : d))
+    } else if (drawing.type === 'select') {
+      setSelectedDrawing(drawing.drawing)
     } else {
       setDrawings(prev => [...prev, drawing])
     }
@@ -72,6 +81,8 @@ function App() {
             isToolbar={true}
             drawingMode={drawingMode}
             setDrawingMode={setDrawingMode}
+            selectedDrawing={selectedDrawing}
+            setSelectedDrawing={setSelectedDrawing}
           />
           <FootballPitch>
             {playersOnPitch.map(player => (
@@ -94,6 +105,8 @@ function App() {
               drawings={drawings}
               drawingMode={drawingMode}
               setDrawingMode={setDrawingMode}
+              selectedDrawing={selectedDrawing}
+              setSelectedDrawing={setSelectedDrawing}
             />
           </FootballPitch>
           
@@ -110,7 +123,7 @@ function App() {
       </main>
       
       <div className="version-info">
-        v1.2.0
+        v1.3.0
       </div>
     </div>
   )
