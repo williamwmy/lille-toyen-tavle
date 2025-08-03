@@ -97,7 +97,7 @@ const DraggablePlayer = ({
     return (
       <div className={`roster-player ${player.team}`}>
         <div className="player-circle">
-          {player.name ? player.name.charAt(0).toUpperCase() : '?'}
+          {player.name ? player.name.charAt(0).toUpperCase() : ''}
         </div>
         {player.name && (
           <div className="player-name">{player.name}</div>
@@ -137,7 +137,7 @@ const DraggablePlayer = ({
         fontWeight="bold"
         pointerEvents="none"
       >
-        {player.name ? player.name.charAt(0).toUpperCase() : '?'}
+        {player.name ? player.name.charAt(0).toUpperCase() : ''}
       </text>
       {player.name && (
         <text
