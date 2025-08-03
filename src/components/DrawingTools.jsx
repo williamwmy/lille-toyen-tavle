@@ -9,10 +9,15 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragPreview, setDragPreview] = useState(null);
   const [justCreatedDrawing, setJustCreatedDrawing] = useState(null);
+  const [polygonPoints, setPolygonPoints] = useState([]);
   const svgRef = useRef(null);
 
   const handleDrawingClick = (drawing, e) => {
     e.stopPropagation();
+    
+    // Don't handle clicks on drawings when in polygon mode
+    if (drawingMode === 'polygon') return;
+    
     if (selectedDrawing?.id === drawing.id) {
       // Double click to delete
       onAddDrawing({ type: 'delete', id: drawing.id });
@@ -22,6 +27,9 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const startDraggingDrawing = (drawing, e) => {
+    // Don't allow dragging in polygon mode
+    if (drawingMode === 'polygon') return;
+    
     // Prevent dragging if we just created this drawing
     if (justCreatedDrawing === drawing.id) {
       setJustCreatedDrawing(null);
@@ -42,7 +50,12 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
         x: x - drawing.start.x,
         y: y - drawing.start.y
       });
-    } else if (drawing.type === 'box') {
+    } else if (drawing.type === 'box' || drawing.type === 'oval') {
+      setDragOffset({
+        x: x - drawing.x,
+        y: y - drawing.y
+      });
+    } else if (drawing.type === 'polygon') {
       setDragOffset({
         x: x - drawing.x,
         y: y - drawing.y
@@ -73,14 +86,32 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       };
       
       setDragPreview(previewDrawing);
-    } else if (selectedDrawing.type === 'box') {
+    } else if (selectedDrawing.type === 'box' || selectedDrawing.type === 'oval') {
       const previewDrawing = {
         id: selectedDrawing.id,
-        type: 'box',
+        type: selectedDrawing.type,
         x: newX,
         y: newY,
         width: selectedDrawing.width,
         height: selectedDrawing.height
+      };
+      
+      setDragPreview(previewDrawing);
+    } else if (selectedDrawing.type === 'polygon') {
+      const deltaX = newX - selectedDrawing.x;
+      const deltaY = newY - selectedDrawing.y;
+      
+      const previewDrawing = {
+        id: selectedDrawing.id,
+        type: 'polygon',
+        x: newX,
+        y: newY,
+        width: selectedDrawing.width,
+        height: selectedDrawing.height,
+        points: selectedDrawing.points.map(point => ({
+          x: point.x + deltaX,
+          y: point.y + deltaY
+        }))
       };
       
       setDragPreview(previewDrawing);
@@ -109,7 +140,60 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     setIsDraggingDrawing(false);
   };
 
+  const handlePolygonClick = (e) => {
+    if (drawingMode !== 'polygon') return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const x = (e.clientX - svgRect.left) * (300 / svgRect.width);
+    const y = (e.clientY - svgRect.top) * (420 / svgRect.height);
+    
+    // Check if click is too close to an existing point (avoid duplicates)
+    const tooClose = polygonPoints.some(point => 
+      Math.abs(point.x - x) < 5 && Math.abs(point.y - y) < 5
+    );
+    
+    if (tooClose) return;
+    
+    const newPoints = [...polygonPoints, { x, y }];
+    setPolygonPoints(newPoints);
+    
+    if (newPoints.length === 4) {
+      // Create the polygon when we have 4 points
+      const minX = Math.min(...newPoints.map(p => p.x));
+      const maxX = Math.max(...newPoints.map(p => p.x));
+      const minY = Math.min(...newPoints.map(p => p.y));
+      const maxY = Math.max(...newPoints.map(p => p.y));
+      
+      const newDrawing = {
+        id: Date.now(),
+        type: 'polygon',
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        points: newPoints
+      };
+      
+      onAddDrawing(newDrawing);
+      setJustCreatedDrawing(newDrawing.id);
+      setPolygonPoints([]);
+      setTimeout(() => {
+        setDrawingMode(null);
+        setSelectedDrawing(newDrawing);
+      }, 0);
+    }
+  };
+
   const startDrawing = (e) => {
+    // Handle polygon mode separately with higher priority
+    if (drawingMode === 'polygon') {
+      handlePolygonClick(e);
+      return;
+    }
+    
     // Clear selection if clicking on empty space
     if (!isDrawing && !drawingMode) {
       setSelectedDrawing(null);
@@ -133,6 +217,9 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const continueDrawing = (e) => {
+    // Skip if in polygon mode
+    if (drawingMode === 'polygon') return;
+    
     if (isDraggingDrawing) {
       dragDrawing(e);
       return;
@@ -147,10 +234,23 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     
     if (drawingMode === 'arrow') {
       setCurrentPath(`M ${startPoint.x} ${startPoint.y} L ${x} ${y}`);
+    } else if (drawingMode === 'box' || drawingMode === 'oval') {
+      // Update preview box/oval dimensions while drawing
+      const width = Math.abs(x - startPoint.x);
+      const height = Math.abs(y - startPoint.y);
+      setCurrentPath({
+        x: Math.min(startPoint.x, x),
+        y: Math.min(startPoint.y, y),
+        width: width,
+        height: height
+      });
     }
   };
 
   const finishDrawing = (e) => {
+    // Skip if in polygon mode
+    if (drawingMode === 'polygon') return;
+    
     if (isDraggingDrawing) {
       stopDraggingDrawing();
       return;
@@ -178,16 +278,16 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
         setDrawingMode(null);
         setSelectedDrawing(newDrawing);
       }, 0);
-    } else if (drawingMode === 'box') {
-      // FIX: Sørg for at boksen alltid har positiv bredde og høyde
+    } else if (drawingMode === 'box' || drawingMode === 'oval') {
+      // FIX: Sørg for at boksen/ovalen alltid har positiv bredde og høyde
       const width = Math.abs(x - startPoint.x);
       const height = Math.abs(y - startPoint.y);
       
-      // Kun lag boksen hvis den har en meningsfull størrelse
+      // Kun lag boksen/ovalen hvis den har en meningsfull størrelse
       if (width >= 5 && height >= 5) {
         const newDrawing = {
           id: Date.now(),
-          type: 'box',
+          type: drawingMode,
           x: Math.min(startPoint.x, x),
           y: Math.min(startPoint.y, y),
           width: width,
@@ -209,6 +309,18 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const handleTouchStart = (e) => {
+    // For polygon mode, handle immediately
+    if (drawingMode === 'polygon') {
+      const touch = e.touches[0];
+      handlePolygonClick({
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        preventDefault: () => {},
+        stopPropagation: () => e.stopPropagation()
+      });
+      return;
+    }
+    
     if (!drawingMode && !isDraggingDrawing) return;
     const touch = e.touches[0];
     
@@ -226,6 +338,9 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const handleTouchMove = (e) => {
+    // Skip touch move for polygon mode
+    if (drawingMode === 'polygon') return;
+    
     const touch = e.touches[0];
     
     if (isDraggingDrawing) {
@@ -251,6 +366,9 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
   };
 
   const handleTouchEnd = (e) => {
+    // Skip touch end for polygon mode
+    if (drawingMode === 'polygon') return;
+    
     if (isDraggingDrawing) {
       stopDraggingDrawing();
       return;
@@ -284,7 +402,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     const isDragging = isDraggingDrawing && isSelected;
     
     return (
-      <g key={drawing.id}>
+      <g key={drawing.id} style={{ pointerEvents: drawingMode === 'polygon' ? 'none' : 'all' }}>
         {/* Invisible thick hitbox for easier interaction */}
         <path
           d={drawingToRender.path}
@@ -294,7 +412,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
           onClick={(e) => handleDrawingClick(drawing, e)}
           onMouseDown={(e) => startDraggingDrawing(drawing, e)}
           onTouchStart={(e) => {
-            if (isSelected) {
+            if (isSelected && drawingMode !== 'polygon') {
               const touch = e.touches[0];
               startDraggingDrawing(drawing, {
                 ...e,
@@ -304,7 +422,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
               });
             }
           }}
-          style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
+          style={{ cursor: isSelected ? 'move' : 'pointer' }}
         />
         
         {/* Visible arrow line */}
@@ -326,7 +444,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
           onClick={(e) => handleDrawingClick(drawing, e)}
           onMouseDown={(e) => startDraggingDrawing(drawing, e)}
           onTouchStart={(e) => {
-            if (isSelected) {
+            if (isSelected && drawingMode !== 'polygon') {
               const touch = e.touches[0];
               startDraggingDrawing(drawing, {
                 ...e,
@@ -336,7 +454,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
               });
             }
           }}
-          style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
+          style={{ cursor: isSelected ? 'move' : 'pointer' }}
         />
         
         {/* Visible arrowhead */}
@@ -380,7 +498,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     const isDragging = isDraggingDrawing && isSelected;
     
     return (
-      <g key={drawing.id}>
+      <g key={drawing.id} style={{ pointerEvents: drawingMode === 'polygon' ? 'none' : 'all' }}>
         <rect
           x={drawingToRender.x}
           y={drawingToRender.y}
@@ -394,7 +512,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
           onClick={(e) => handleDrawingClick(drawing, e)}
           onMouseDown={(e) => startDraggingDrawing(drawing, e)}
           onTouchStart={(e) => {
-            if (isSelected) {
+            if (isSelected && drawingMode !== 'polygon') {
               const touch = e.touches[0];
               startDraggingDrawing(drawing, {
                 ...e,
@@ -404,7 +522,7 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
               });
             }
           }}
-          style={{ cursor: isSelected ? 'move' : 'pointer', pointerEvents: 'all' }}
+          style={{ cursor: isSelected ? 'move' : 'pointer' }}
         />
         {isSelected && !isDragging && (
           <>
@@ -446,6 +564,105 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
     );
   };
 
+  const renderOval = (drawing) => {
+    // Use dragPreview if this drawing is being dragged
+    const drawingToRender = (isDraggingDrawing && selectedDrawing?.id === drawing.id && dragPreview) ? dragPreview : drawing;
+    
+    const isSelected = selectedDrawing?.id === drawing.id;
+    const isDragging = isDraggingDrawing && isSelected;
+    
+    const rx = drawingToRender.width / 2;
+    const ry = drawingToRender.height / 2;
+    const cx = drawingToRender.x + rx;
+    const cy = drawingToRender.y + ry;
+    
+    return (
+      <g key={drawing.id} style={{ pointerEvents: drawingMode === 'polygon' ? 'none' : 'all' }}>
+        <ellipse
+          cx={cx}
+          cy={cy}
+          rx={rx}
+          ry={ry}
+          fill="rgba(255, 87, 34, 0.1)"
+          stroke={isSelected ? "#FF9800" : "#FF5722"}
+          strokeWidth={isSelected ? "3" : "2"}
+          strokeDasharray="5,5"
+          opacity={isDragging ? 0.7 : 1}
+          onClick={(e) => handleDrawingClick(drawing, e)}
+          onMouseDown={(e) => startDraggingDrawing(drawing, e)}
+          onTouchStart={(e) => {
+            if (isSelected && drawingMode !== 'polygon') {
+              const touch = e.touches[0];
+              startDraggingDrawing(drawing, {
+                ...e,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                stopPropagation: () => e.stopPropagation()
+              });
+            }
+          }}
+          style={{ cursor: isSelected ? 'move' : 'pointer' }}
+        />
+        {isSelected && !isDragging && (
+          <>
+            <circle cx={cx - rx} cy={cy} r="4" fill="#FF9800" stroke="white" strokeWidth="1" />
+            <circle cx={cx + rx} cy={cy} r="4" fill="#FF9800" stroke="white" strokeWidth="1" />
+            <circle cx={cx} cy={cy - ry} r="4" fill="#FF9800" stroke="white" strokeWidth="1" />
+            <circle cx={cx} cy={cy + ry} r="4" fill="#FF9800" stroke="white" strokeWidth="1" />
+          </>
+        )}
+      </g>
+    );
+  };
+
+  const renderPolygon = (drawing) => {
+    // Use dragPreview if this drawing is being dragged
+    const drawingToRender = (isDraggingDrawing && selectedDrawing?.id === drawing.id && dragPreview) ? dragPreview : drawing;
+    
+    const isSelected = selectedDrawing?.id === drawing.id;
+    const isDragging = isDraggingDrawing && isSelected;
+    
+    const pointsString = drawingToRender.points.map(p => `${p.x},${p.y}`).join(' ');
+    
+    return (
+      <g key={drawing.id} style={{ pointerEvents: drawingMode === 'polygon' ? 'none' : 'all' }}>
+        <polygon
+          points={pointsString}
+          fill="rgba(255, 87, 34, 0.1)"
+          stroke={isSelected ? "#FF9800" : "#FF5722"}
+          strokeWidth={isSelected ? "3" : "2"}
+          strokeDasharray="5,5"
+          opacity={isDragging ? 0.7 : 1}
+          onClick={(e) => handleDrawingClick(drawing, e)}
+          onMouseDown={(e) => startDraggingDrawing(drawing, e)}
+          onTouchStart={(e) => {
+            if (isSelected && drawingMode !== 'polygon') {
+              const touch = e.touches[0];
+              startDraggingDrawing(drawing, {
+                ...e,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                stopPropagation: () => e.stopPropagation()
+              });
+            }
+          }}
+          style={{ cursor: isSelected ? 'move' : 'pointer' }}
+        />
+        {isSelected && !isDragging && drawingToRender.points.map((point, index) => (
+          <circle
+            key={index}
+            cx={point.x}
+            cy={point.y}
+            r="4"
+            fill="#FF9800"
+            stroke="white"
+            strokeWidth="1"
+          />
+        ))}
+      </g>
+    );
+  };
+
   if (isToolbar) {
     return (
       <div className="drawing-tools">
@@ -453,31 +670,62 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
           className={`tool-btn ${drawingMode === 'arrow' ? 'active' : ''}`}
           onClick={() => setDrawingMode(drawingMode === 'arrow' ? null : 'arrow')}
         >
-          ↗ Pil
+          ↗
         </button>
         <button
           className={`tool-btn ${drawingMode === 'box' ? 'active' : ''}`}
           onClick={() => setDrawingMode(drawingMode === 'box' ? null : 'box')}
         >
-          ⬜ Boks
+          ⬜
         </button>
+        <button
+          className={`tool-btn ${drawingMode === 'oval' ? 'active' : ''}`}
+          onClick={() => setDrawingMode(drawingMode === 'oval' ? null : 'oval')}
+        >
+          ⭕
+        </button>
+        <button
+          className={`tool-btn ${drawingMode === 'polygon' ? 'active' : ''}`}
+          onClick={() => {
+            if (drawingMode === 'polygon') {
+              setDrawingMode(null);
+              setPolygonPoints([]);
+            } else {
+              setDrawingMode('polygon');
+            }
+          }}
+        >
+          ◇{polygonPoints.length > 0 && ` ${polygonPoints.length}/4`}
+        </button>
+        {drawingMode === 'polygon' && polygonPoints.length > 0 && (
+          <button
+            className="cancel-polygon-btn"
+            onClick={() => {
+              setPolygonPoints([]);
+              setDrawingMode(null);
+            }}
+          >
+            Avbryt
+          </button>
+        )}
         <button
           className="clear-drawings-btn"
           onClick={() => onAddDrawing({ type: 'clear' })}
         >
-          Slett alle
+          Slett
         </button>
-        {selectedDrawing && (
-          <button
-            className="delete-selected-btn"
-            onClick={() => {
+        <button
+          className={`delete-selected-btn ${!selectedDrawing ? 'disabled' : ''}`}
+          onClick={() => {
+            if (selectedDrawing) {
               onAddDrawing({ type: 'delete', id: selectedDrawing.id });
               setSelectedDrawing(null);
-            }}
-          >
-            Slett valgt
-          </button>
-        )}
+            }
+          }}
+          disabled={!selectedDrawing}
+        >
+          Valgt
+        </button>
       </div>
     );
   }
@@ -493,9 +741,12 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      
       {drawings.map(drawing => {
         if (drawing.type === 'arrow') return renderArrow(drawing);
         if (drawing.type === 'box') return renderBox(drawing);
+        if (drawing.type === 'oval') return renderOval(drawing);
+        if (drawing.type === 'polygon') return renderPolygon(drawing);
         return null;
       })}
       
@@ -506,20 +757,76 @@ const DrawingTools = ({ onAddDrawing, drawings = [], isToolbar = false, drawingM
           strokeWidth="2"
           fill="none"
           opacity="0.7"
+          pointerEvents="none"
         />
       )}
       
-      {isDrawing && drawingMode === 'box' && startPoint && (
+      {isDrawing && drawingMode === 'box' && startPoint && currentPath && typeof currentPath === 'object' && (
         <rect
-          x={startPoint.x}
-          y={startPoint.y}
-          width="0"
-          height="0"
+          x={currentPath.x}
+          y={currentPath.y}
+          width={currentPath.width}
+          height={currentPath.height}
           fill="rgba(255, 87, 34, 0.1)"
           stroke="#FF5722"
           strokeWidth="2"
           strokeDasharray="5,5"
           opacity="0.7"
+          pointerEvents="none"
+        />
+      )}
+      
+      {isDrawing && drawingMode === 'oval' && startPoint && currentPath && typeof currentPath === 'object' && (
+        <ellipse
+          cx={currentPath.x + currentPath.width / 2}
+          cy={currentPath.y + currentPath.height / 2}
+          rx={currentPath.width / 2}
+          ry={currentPath.height / 2}
+          fill="rgba(255, 87, 34, 0.1)"
+          stroke="#FF5722"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          opacity="0.7"
+          pointerEvents="none"
+        />
+      )}
+      
+      {drawingMode === 'polygon' && polygonPoints.map((point, index) => (
+        <circle
+          key={index}
+          cx={point.x}
+          cy={point.y}
+          r="4"
+          fill="#FF5722"
+          stroke="white"
+          strokeWidth="2"
+          pointerEvents="none"
+        />
+      ))}
+      
+      {drawingMode === 'polygon' && polygonPoints.length >= 2 && (
+        <polyline
+          points={polygonPoints.map(p => `${p.x},${p.y}`).join(' ')}
+          fill="none"
+          stroke="#FF5722"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          opacity="0.7"
+          pointerEvents="none"
+        />
+      )}
+      
+      {drawingMode === 'polygon' && polygonPoints.length === 3 && (
+        <line
+          x1={polygonPoints[2].x}
+          y1={polygonPoints[2].y}
+          x2={polygonPoints[0].x}
+          y2={polygonPoints[0].y}
+          stroke="#FF5722"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          opacity="0.7"
+          pointerEvents="none"
         />
       )}
       

@@ -25,7 +25,7 @@ const VolleyballCourt = ({ children }) => {
           y="40" 
           width="240" 
           height="340" 
-          fill="#D2691E" 
+          fill="#4CAF50" 
           stroke="#ffffff" 
           strokeWidth="3"
           rx="0"

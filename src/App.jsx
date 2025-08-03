@@ -213,7 +213,7 @@ function App() {
       </main>
       
       <div className="version-info">
-        v1.5.0
+        v1.6.0
       </div>
     </div>
   )

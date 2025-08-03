@@ -56,6 +56,32 @@
   background: #D32F2F;
 }
 
+.delete-selected-btn.disabled {
+  background: #BDBDBD;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.delete-selected-btn.disabled:hover {
+  background: #BDBDBD;
+}
+
+.cancel-polygon-btn {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.cancel-polygon-btn:hover {
+  background: #f57c00;
+}
+
 .drawing-overlay {
   pointer-events: none;
 }
@@ -70,26 +96,35 @@
 
 @media (max-width: 768px) {
   .drawing-tools {
-    padding: 8px;
-    gap: 8px;
+    padding: 6px;
+    gap: 4px;
   }
   
-  .tool-btn, .clear-drawings-btn, .delete-selected-btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    min-width: 50px;
+  .tool-btn, .clear-drawings-btn, .delete-selected-btn, .cancel-polygon-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    min-width: 42px;
+    flex: 1;
   }
 }
 
 @media (max-width: 480px) {
   .drawing-tools {
-    padding: 6px;
-    gap: 6px;
+    padding: 4px;
+    gap: 3px;
+    flex-wrap: nowrap;
   }
   
-  .tool-btn, .clear-drawings-btn, .delete-selected-btn {
-    padding: 5px 8px;
-    font-size: 10px;
-    min-width: 45px;
+  .tool-btn, .clear-drawings-btn, .delete-selected-btn, .cancel-polygon-btn {
+    padding: 4px 6px;
+    font-size: 9px;
+    min-width: 38px;
+    flex: 1;
+  }
+  
+  .tool-btn {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 }
